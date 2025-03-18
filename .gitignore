@@ -1,0 +1,31 @@
+.pio
+.pioenvs/
+.piolibdeps/
+.vscode/
+.qodo
+
+# Arquivos de configuração local
+platformio.ini.user
+
+# Arquivos de compilação
+build/
+*.o
+*.a
+*.elf
+*.hex
+*.bin
+*.map
+*.lst
+
+# Arquivos temporários
+*.tmp
+*.log
+
+# Arquivos de backup do editor
+*~
+*.swp
+*.swo
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
