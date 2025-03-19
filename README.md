@@ -12,6 +12,33 @@ Utiliza um microcontrolador ESP32-S3-WROOM-1 N16R8 para coletar dados de um sens
 - [ESP-IDF (Espressif IoT Development Framework)](https://docs.espressif.com/projects/esp-idf/en/v5.2.5/esp32s3/api-reference/index.html)
 - Driver para o conversor USB-Serial do ESP32-S3-WROOM-1 N16R8 (CP210x , CH340, PL2303, etc)
 
+# Submodulo PulseiraSplash de SplashBeachgoer
+Este projeto é um submodulo do projeto [SplashBeachgoer](https://github.com/JoaoPNVieira/SplashBeachgoer.git). Para clonar o projeto SplashBeachgoer com os submodulos:
+
+- clonar o repo SplashBeachgoer com os submodulos:
+```bash
+git clone --recurse-submodules https://github.com/JoaoPNVieira/SplashBeachgoer.git
+# ou 
+gh repo clone JoaoPNVieira/SplashBeachgoer -- --recurse-submodules
+```
+- adicionar os submodulos ao repo SplashBeachgoer local:
+```bash
+cd path/to/SplashBeachgoer
+git pull
+git submodule init # adiciona o url à path do submodulo no .gitmodules
+git submodule update # clona o repositorio do submodulo
+```
+- atualizar o repo SplashBeachgoer com o ultimo commit do submodulo:
+```bash
+cd path/to/SplashBeachgoer
+git pull
+git submodule update --remote
+git add PulseiraSplash
+git commit -m "Atualizar commit do submodulo"
+git push
+```
+
+
 # Estrutura do projeto (INCOMPLETO)
 ```
 ├── docs/                 	 # Documentação utilizada
