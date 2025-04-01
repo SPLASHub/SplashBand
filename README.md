@@ -42,19 +42,30 @@ git push
 # Estrutura do projeto (INCOMPLETO)
 ```
 ├── docs/                 	 # Documentação utilizada
+|  ├── ESP32/
+│  ├── FreeRTOS/
+│  ├── NEO-6M/
+│  └── BLE_Assigned_Numbers.pdf  
 ├── include/                 # Headers adicionais
 │   └── ...
-├── lib/                     # Bibliotecas locais
-│   └── ...
+├── components/              # Bibliotecas locais
+│   ├── nimble_central_utils/
+│   └── nimble_peripheral_utils/
 ├── src/                     # Código-fonte principal
-│   ├── main.cpp             
+│   ├── ble/
+│   ├── gps/
+│   ├── utils/
+│   ├── main.c             
 │   └── ...
 ├── test/                    # Testes de unidade ou de integração
-│   └── ...
+│   ├── test_circular_buffer/ 
+│   ├── test_neo6m_setup/
+│   └── test_ubx/
 ├── .gitignore
 ├── CMakeLists.txt           # Arquivo de configuração do CMake
 ├── platformio.ini           # Arquivo de configuração principal do PlatformIO
-├── sdkconfig.esp32-s3-wroom-1 # Configuração do ESP32
+├── sdkconfig.esp32-s3-wroom-1 		# Configuração do ESP32 
+├── sdkconfig.esp32-s3-wroom-1-test # Configuração do ESP32 para o enviroment de teste
 └── README.md                
 ```
 
@@ -95,3 +106,35 @@ git push
 5. Selecionar o modelo do ESP32-S3-WROOM-1 N16R8 no PlatformIO
 6. Fazer build do projeto no PlatformIO
 7. Fazer upload do projeto no PlatformIO para o ESP32
+
+# Funcionalidades
+
+No serviço "Location and Navigation", a caracteristica "Location and Speed" transmite os seguintes dados:
+- Latitude
+- Longitude
+- Altitude
+- Velocidade
+- Ano
+- Mês
+- Dia
+- Hora
+- Minuto
+- Segundo
+
+Estes dados são codificados num buffer de 20 bytes da seguinte forma (**estrutura ainda a ser considerada**):
+
+| **Byte(s)** | **Tamanho (bytes)** | **Descrição**                     | **Exemplo**                     |
+|-------------|----------------------|-----------------------------------|----------------------------------|
+| `0`         | 1                    | Flags indicando os dados presentes | `LN_FLAG_LOCATION_PRESENT \| LN_FLAG_ELEVATION_PRESENT \| LN_FLAG_TIME_PRESENT \| LN_FLAG_SPEED_PRESENT` |
+| `1-4`       | 4                    | Latitude (multiplicado por `1e7`) | `-235678901` (representa -23.5678901°) |
+| `5-8`       | 4                    | Longitude (multiplicado por `1e7`) | `-467890123` (representa -46.7890123°) |
+| `9-10`      | 2                    | Altitude (multiplicado por `10`)   | `1234` (representa 123.4 m)      |
+| `11-12`     | 2                    | Velocidade (em m/s)                | `15` (representa 15 m/s)         |
+| `13-14`     | 2                    | Ano (em formato `uint16_t`)        | `2025`                           |
+| `15`        | 1                    | Mês                                | `4` (representa abril)           |
+| `16`        | 1                    | Dia                                | `1`                              |
+| `17`        | 1                    | Hora (ajustada para o fuso horário)| `14` (representa 14h)            |
+| `18`        | 1                    | Minuto                             | `30`                             |
+| `19`        | 1                    | Segundo                            | `45`                             |
+
+
