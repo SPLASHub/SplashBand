@@ -7,89 +7,79 @@
 #include "services/gatt/ble_svc_gatt.h"
 #include "services/ans/ble_svc_ans.h"
 #include "esp_log.h"
+
 #include "gatt_srv.h"
+#include "gps/nmea_parser.h"
 
+/*
+ano, mes, dia, hora, minuto, segundo
+latitude, longitude, altitude, velocidade
+
+*/
 static const char *TAG = "NIMBLE_STACK";
-// Buffers para armazenar os dados GPGGA e GPRMC
-static char gpgga_data[100] = "$GPGGA,123519,4807.038,N,01131.000,E,1,08,0.9,545.4,M,46.9,M,,*47";
-static char gprmc_data[100] = "$GPRMC,123519,A,4807.038,N,01131.000,E,022.4,084.4,230394,003.1,W*6A";
+static uint8_t ln_buffer[20]; // Buffer para armazenar os dados LN
 
-// Serviço GNSS_Server (UUID 0x1136)
-static const ble_uuid16_t gatt_svc_gnss_uuid = BLE_UUID16_INIT(GNSS_SERVER_SVC_UUID);
-//static const ble_uuid128_t gatt_svc_gnss_uuid = BLE_UUID128_INIT(0x19, 0x18, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00,
-//																 0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB);
-
-static const ble_uuid128_t gatt_chr_gpgga_uuid = BLE_UUID128_INIT(0x67, 0x2A, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00,
-																  0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB);
-
-static const ble_uuid128_t gatt_chr_gprmc_uuid = BLE_UUID128_INIT(0x68, 0x2A, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00,
-																  0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB);
-
-/**/
-void update_gpgga_data(const char *data)
+// TODO : ter em conta o horario de verao 
+void update_location_speed_data(const gps_t gps) // const para garantir que o valor não vai ser alterado
 {
-	strncpy(gpgga_data, data, sizeof(gpgga_data) - 1);
-	gpgga_data[sizeof(gpgga_data) - 1] = '\0'; // Garante terminação nula
-											   // Atualiza o valor da característica GPGGA
-	ble_gatts_chr_updated(attr_handle_gpgga);
+	ESP_LOGI(TAG, "update_location_speed_data()");
+	int32_t lat = (int32_t)(gps.latitude  * 1e7);
+	int32_t lon = (int32_t)(gps.longitude * 1e7);
+	int16_t alt = (int16_t)(gps.altitude * 10);
+	uint16_t spd = (uint16_t)(gps.speed);
+	uint16_t year = gps.date.year + YEAR_BASE; 
+
+    memset(ln_buffer, 0, sizeof(ln_buffer)); // Limpa o buffer
+
+    ln_buffer[0] = LN_FLAG_LOCATION_PRESENT | LN_FLAG_ELEVATION_PRESENT | LN_FLAG_TIME_PRESENT | LN_FLAG_SPEED_PRESENT;
+    memcpy(&ln_buffer[1], &lat, 4);
+    memcpy(&ln_buffer[5], &lon, 4);
+    memcpy(&ln_buffer[9], &alt, 2);
+	memcpy(&ln_buffer[11], &spd, 2);
+    ln_buffer[13] = (uint8_t)(year & 0xFF);
+    ln_buffer[14] = (uint8_t)(year >> 8);
+    ln_buffer[15] = gps.date.month;
+    ln_buffer[16] = gps.date.day;
+    ln_buffer[17] = gps.tim.hour + TIME_ZONE;
+    ln_buffer[18] = gps.tim.minute;
+    ln_buffer[19] = gps.tim.second;
+
+	ble_gatts_chr_updated(attr_handle_location_speed);
 
 	// Notifica os clientes conectados
-	//notify_gpgga_data();
+	//notify_location_speed_data();
 }
 
-void update_gprmc_data(const char *data)
+static int location_speed_access_cb(uint16_t conn_handle,uint16_t attr_handle,struct ble_gatt_access_ctxt *ctxt,void *arg)
 {
-	strncpy(gprmc_data, data, sizeof(gprmc_data) - 1);
-	gprmc_data[sizeof(gprmc_data) - 1] = '\0'; // Garante terminação nula
-											   // Atualiza o valor da característica GPRMC
-	ble_gatts_chr_updated(attr_handle_gprmc);
+/* 	BLE_GATT_ACCESS_OP_READ_CHR
+	BLE_GATT_ACCESS_OP_WRITE_CHR
+	BLE_GATT_ACCESS_OP_READ_DSC
+	BLE_GATT_ACCESS_OP_WRITE_DSC */
+    if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR) {
+	
+        int rc = os_mbuf_append(ctxt->om, ln_buffer, sizeof(ln_buffer));//Append to the response
+        if (rc != 0)
+		{
+			ESP_LOGE(TAG, "Failed to append LN_buffer data");
+			return BLE_ATT_ERR_INSUFFICIENT_RES;
+		}
+		return 0; // Sucesso
+    }
+    return BLE_ATT_ERR_UNLIKELY;
+}
 
-	// Notifica os clientes conectados
-	//notify_gprmc_data();
-}
-static int gatt_chr_gpgga_read_cb(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
-{
-	ESP_LOGI(TAG, "GPGGA Read: conn_handle=%d, attr_handle=%d", conn_handle, attr_handle);
-	// Retorna o valor da característica GPGGA
-	int rc = os_mbuf_append(ctxt->om, gpgga_data, strlen(gpgga_data));
-	if (rc != 0)
-	{
-		ESP_LOGE(TAG, "Failed to append GPGGA data to mbuf");
-		return BLE_ATT_ERR_INSUFFICIENT_RES;
-	}
-	return 0; // Sucesso
-}
-// Callback para leitura da característica GPRMC
-static int gatt_chr_gprmc_read_cb(uint16_t conn_handle, uint16_t attr_handle, struct ble_gatt_access_ctxt *ctxt, void *arg)
-{
-	ESP_LOGI(TAG, "GPRMC Read: conn_handle=%d, attr_handle=%d", conn_handle, attr_handle);
-	// Retorna o valor da característica GPRMC
-	int rc = os_mbuf_append(ctxt->om, gprmc_data, strlen(gprmc_data));
-	if (rc != 0)
-	{
-		ESP_LOGE(TAG, "Failed to append GPRMC data to mbuf");
-		return BLE_ATT_ERR_INSUFFICIENT_RES;
-	}
-	return 0; // Sucesso
-}
 
 // Array de serviços GATT
 static const struct ble_gatt_svc_def gatt_gnss_svcs[] = {
 	/* GNSS service */
 	{.type = BLE_GATT_SVC_TYPE_PRIMARY,
-	 .uuid = &gatt_svc_gnss_uuid.u,
+	 .uuid = BLE_UUID16_DECLARE(BLE_UUID_LOCATION_NAV_SVC),
 	 .characteristics = (struct ble_gatt_chr_def[]){
 		 {
-			 /* GPGGA characteristic*/
-			 .uuid = &gatt_chr_gpgga_uuid.u,
-			 .access_cb = gatt_chr_gpgga_read_cb,
-			 .flags = BLE_GATT_CHR_F_READ,
-		 },
-		 {
-			 /* GPRMC characteristic*/
-			 .uuid = &gatt_chr_gprmc_uuid.u,
-			 .access_cb = gatt_chr_gprmc_read_cb,
-			 .flags = BLE_GATT_CHR_F_READ,
+			.uuid = BLE_UUID16_DECLARE(BLE_UUID_LOC_SPEED_CHR),
+            .access_cb = location_speed_access_cb,
+            .flags = BLE_GATT_CHR_F_READ, 
 		 },
 		 {0}, // Fim da lista
 	 }},

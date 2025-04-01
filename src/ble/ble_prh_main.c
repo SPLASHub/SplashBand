@@ -100,7 +100,7 @@ porting/npl/freertos/include/nimble/nimble_port_freertos.h
 #include "ble_prh_main.h"
 
 #define NIMBLE_HS_STACK_SIZE CONFIG_BT_NIMBLE_HOST_TASK_STACK_SIZE 	// default - valor definido em sdkconfig
-#define NIMBLE_CORE 0												// default
+//#define NIMBLE_CORE 0												// default
 #define NIMBLE_HOST_TASK_PRIO (configMAX_PRIORITIES - 4) 			// default
 
 static const char *TAG = "NIMBLE_STACK";
