@@ -25,15 +25,11 @@ struct ble_gatt_register_ctxt;
 #define BLE_SVC_GAP_APPEARANCE_CATEGORY_GPS   0x044C
 #define BLE_APPEARANCE_GENERIC_WATCH  0x00C0
 
-/** GNSS Server service UUID. */
-#define GNSS_SERVER_SVC_UUID   0x1136 // No BLE, o descobrimento de serviços e características ocorre via GATT (UUIDs e Services), não via SDP.
-/** N TENHO A CERTEZA */
-#define GNSS__SVC_UUID 0x1135 // No BLE, o descobrimento de serviços e características ocorre via GATT (UUIDs e Services), não via SDP.
-#define LATITUDE_CHR_UUID 0x2A67
-#define LONGITUDE_CHR_UUID 0x2A68
 
 #define BLE_UUID_LOCATION_NAV_SVC     0x1819 // LN Service
 #define BLE_UUID_LOC_SPEED_CHR        0x2A67 // Characteristic "Location and Speed
+#define CUSTOM_JSON_SERVICE_UUID  0xABF0
+#define CUSTOM_JSON_CHR_UUID      0xABF1
 
 /* Flags bit definitions (simplificado):
    - bit0 = Instant Speed Present
@@ -52,13 +48,13 @@ struct ble_gatt_register_ctxt;
 
 	// Handles para conexão e características
 	static uint16_t conn_handle;
-	static uint16_t attr_handle_gpgga;
-	static uint16_t attr_handle_gprmc;
    static uint16_t attr_handle_location_speed;
+   static uint16_t attr_handle_json;
 
 	void update_gpgga_data(const char *data);
 	void update_gprmc_data(const char *data);
    void update_location_speed_data(const gps_t gps);
+   void update_location_speed_json(const gps_t gps);
 	void gatt_svr_register_cb(struct ble_gatt_register_ctxt *ctxt, void *arg);
 	int gatt_svr_init(void);
 

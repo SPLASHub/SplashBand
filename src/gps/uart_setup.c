@@ -32,6 +32,7 @@ static void gps_event_handler(void *event_handler_arg, esp_event_base_t event_ba
                  gps->latitude, gps->longitude, gps->altitude, gps->speed);
         gps_t local_gps = *(gps_t *)event_data; // assim envia uma copia para nao haver risco dos dados serem alterados durante a execucao
         update_location_speed_data(local_gps);
+        update_location_speed_json(local_gps);
         break;
     case GPS_UNKNOWN:
         ESP_LOGW(TAG, "Unknown statement:%s", (char *)event_data);

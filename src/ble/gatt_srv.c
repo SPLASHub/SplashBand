@@ -18,6 +18,7 @@ latitude, longitude, altitude, velocidade
 */
 static const char *TAG = "NIMBLE_STACK";
 static uint8_t ln_buffer[20]; // Buffer para armazenar os dados LN
+static char json_buf[200]; 
 
 // TODO : ter em conta o horario de verao 
 void update_location_speed_data(const gps_t gps) // const para garantir que o valor não vai ser alterado
@@ -50,6 +51,41 @@ void update_location_speed_data(const gps_t gps) // const para garantir que o va
 	//notify_location_speed_data();
 }
 
+void update_location_speed_json(const gps_t gps)
+{
+    memset(json_buf, 0, sizeof(json_buf));
+
+    // Observando que gps.date.year + YEAR_BASE, etc.
+    int year  = gps.date.year + YEAR_BASE;
+    int hour  = gps.tim.hour + TIME_ZONE;
+
+    // Exemplo usando snprintf:
+    snprintf(json_buf, sizeof(json_buf),
+        "{\"latitude\":%.6f,"
+         "\"longitude\":%.6f,"
+         "\"altitude\":%.2f,"
+         "\"speed\":%.2f,"
+         "\"date\":\"%04d-%02d-%02d\","
+         "\"time\":\"%02d:%02d:%02d\"}",
+         gps.latitude, gps.longitude, gps.altitude, gps.speed,
+         year, gps.date.month, gps.date.day,
+         hour, gps.tim.minute, gps.tim.second
+    );
+
+    ESP_LOGI(TAG, "update_location_speed_json() => %s", json_buf);
+
+    // Agora, precisamos atualizar o valor dessa characteristic no GATT:
+    // 1. ble_gatts_set_attr(attr_handle_json, <ptr>, <len>)
+    // 2. ble_gatts_chr_updated(attr_handle_json);
+
+    size_t len = strlen(json_buf);
+
+    // (A) Se estiver usando NimBLE no estilo "ble_gatts_set_attr" para gravar o valor no atributo:
+    //ble_gatts_set_attr(attr_handle_json, json_buf, len);
+
+    // (B) Informar que atualizamos (dispara notificação se habilitado)
+    ble_gatts_chr_updated(attr_handle_json);
+}
 static int location_speed_access_cb(uint16_t conn_handle,uint16_t attr_handle,struct ble_gatt_access_ctxt *ctxt,void *arg)
 {
 /* 	BLE_GATT_ACCESS_OP_READ_CHR
@@ -69,6 +105,24 @@ static int location_speed_access_cb(uint16_t conn_handle,uint16_t attr_handle,st
     return BLE_ATT_ERR_UNLIKELY;
 }
 
+static int location_speed_json_access_cb(uint16_t conn_handle,uint16_t attr_handle,struct ble_gatt_access_ctxt *ctxt,void *arg)
+{
+/* 	BLE_GATT_ACCESS_OP_READ_CHR
+	BLE_GATT_ACCESS_OP_WRITE_CHR
+	BLE_GATT_ACCESS_OP_READ_DSC
+	BLE_GATT_ACCESS_OP_WRITE_DSC */
+    if (ctxt->op == BLE_GATT_ACCESS_OP_READ_CHR) {
+	
+        int rc = os_mbuf_append(ctxt->om, json_buf, sizeof(json_buf));//Append to the response
+        if (rc != 0)
+		{
+			ESP_LOGE(TAG, "Failed to append json_buf data");
+			return BLE_ATT_ERR_INSUFFICIENT_RES;
+		}
+		return 0; // Sucesso
+    }
+    return BLE_ATT_ERR_UNLIKELY;
+}
 
 // Array de serviços GATT
 static const struct ble_gatt_svc_def gatt_gnss_svcs[] = {
@@ -82,8 +136,19 @@ static const struct ble_gatt_svc_def gatt_gnss_svcs[] = {
             .flags = BLE_GATT_CHR_F_READ, 
 		 },
 		 {0}, // Fim da lista
-	 }},
-
+	 }
+	},
+	{.type = BLE_GATT_SVC_TYPE_PRIMARY,
+	 .uuid = BLE_UUID16_DECLARE(CUSTOM_JSON_SERVICE_UUID),
+	 .characteristics = (struct ble_gatt_chr_def[]){
+		 {
+			.uuid = BLE_UUID16_DECLARE(CUSTOM_JSON_CHR_UUID),
+            .access_cb = location_speed_json_access_cb,
+            .flags = BLE_GATT_CHR_F_READ, 
+		 },
+		 {0}, // Fim da lista
+	 }
+	},
 	{
 		0,
 	}, /* No more services. */
