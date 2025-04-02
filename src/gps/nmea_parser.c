@@ -32,10 +32,29 @@ static const char *GPS_TAG = "NMEA_PARSER";
  */
 static float parse_lat_long(esp_gps_t *esp_gps)
 {
+    ESP_LOGI(GPS_TAG, "parse_lat_long: %s", esp_gps->item_str);
     float ll = strtof(esp_gps->item_str, NULL);
+    //ESP_LOGI(GPS_TAG, ":ll %.9lf", ll);
+    double dll = strtod(esp_gps->item_str, NULL);
+    //ESP_LOGI(GPS_TAG, ":dll %.9lf", dll);
     int deg = ((int)ll) / 100;
+    //ESP_LOGI(GPS_TAG, ":deg %d", deg);
+    int ddeg = ((int)ll) / 100;
+    //ESP_LOGI(GPS_TAG, ":ddeg %d", ddeg);
     float min = ll - (deg * 100);
+    /* ESP_LOGI(GPS_TAG, ":min %.9lf", min);
+    ESP_LOGI(GPS_TAG, ":min/60 %.9lf", min/60.0f); */
+    double dmin = ll - (deg * 100);
+    /* ESP_LOGI(GPS_TAG, ":dmin %.9lf", dmin);
+    ESP_LOGI(GPS_TAG, ":dmin/60.0f %.9lf", dmin/60.0f);
+    ESP_LOGI(GPS_TAG, ":dmin/60 %.9lf", dmin/60);
+    ESP_LOGI(GPS_TAG, ":dmin/60.0000000f %.9lf", dmin/60.0000000f); */
     ll = deg + min / 60.0f;
+    ESP_LOGI(GPS_TAG, ":float degres %.9lf", ll);
+    double decimal_degrees = deg + (min / 60.0);
+    ESP_LOGI(GPS_TAG, ":double degres %.9lf", decimal_degrees);
+    float fdd = (float)decimal_degrees;
+    //ESP_LOGI(GPS_TAG, ":fdd %.9lf", fdd);
     return ll;
 }
 
@@ -420,6 +439,7 @@ out:
 static esp_err_t gps_decode(esp_gps_t *esp_gps, size_t len)
 {
     const uint8_t *d = esp_gps->buffer;
+    ESP_LOG_BUFFER_HEXDUMP(GPS_TAG, esp_gps->item_str, sizeof(esp_gps->item_str), ESP_LOG_INFO);
     while (*d) {
         /* Start of a statement */
         if (*d == '$') {
@@ -544,7 +564,7 @@ static void esp_handle_uart_pattern(esp_gps_t *esp_gps)
         int read_len = uart_read_bytes(esp_gps->uart_port, esp_gps->buffer, pos + 1, 100 / portTICK_PERIOD_MS);
         /* make sure the line is a standard string */
         esp_gps->buffer[read_len] = '\0';
-        //ESP_LOG_BUFFER_HEXDUMP(GPS_TAG, esp_gps->buffer, read_len, ESP_LOG_INFO);
+        ESP_LOG_BUFFER_HEXDUMP(GPS_TAG, esp_gps->buffer, read_len, ESP_LOG_INFO);
         /* Send new line to handle */
         if (gps_decode(esp_gps, read_len + 1) != ESP_OK) {
             ESP_LOGW(GPS_TAG, "GPS decode line failed");

@@ -138,3 +138,24 @@ Estes dados são codificados num buffer de 20 bytes da seguinte forma (**estrutu
 | `19`        | 1                    | Segundo                            | `45`                             |
 
 
+## A ter em conta para a localização:
+
+- Latitude: 1 grau ≈ 111,32 km
+- Longitude: 1 grau ≈ 111,32×cos(latitude) **a definição depende da latitude - quanto mais perto do equador menor**
+	- latitude 90º (polos): 1 grau ≈ 111,32×cos(90) = 0 km
+	- latitude 0º (equador): 1 grau ≈ 111,32×cos(0) = 111,32 km
+
+|  Variações    | Precisão (da Latitude/minima da Longitude) em disntância |
+| ------------- | ------------------------- 			|
+| **0,1º**      | ~ 11,1 km                          	|
+| **0,01º**     | ~ 1,11 km                 			|
+| **0,001º**    | ~ 111 m                   			|
+| **0,0001º**   | ~ 11,1 m                  			|
+| **0,00001º**  | ~ 1,11 m                  			|
+| **0,000001º** | ~ 0,111 m (~ 11,1 cm)     			|
+| **0,0000001º**| ~ 0,0111 m (~ 1,11 cm)    			|
+| **...**       | ...                       			|
+
+**Conclusão**: A precisão da localização requirida para este dispositivo é de 0,000001 graus (ou 11,1cm de precisão minima). 
+
+
