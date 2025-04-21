@@ -166,17 +166,6 @@ int gatt_svr_init(void)
 	 *	 - Service Changed (0x2A05): Indica alterações na tabela de serviços.
 	 */
 	ble_svc_gatt_init(); // <-- GATT habilitado aqui
-	rc = ble_gatts_count_cfg(gatt_gnss_svcs);
-	if (rc != 0)
-	{
-		return rc;
-	}
-	rc = ble_gatts_add_svcs(gatt_gnss_svcs);
-	if (rc != 0)
-	{
-		return rc;
-	}
-
 	/*
 	 * Serviço de Notificação de Alertas (ANS - Alert Notification Service - 0x1811)
 	 * - Permitir que o dispositivo envie alertas (ex.: notificações de mensagens, alarmes, eventos de sensor) para um cliente (ex.: smartphone).
@@ -188,6 +177,16 @@ int gatt_svr_init(void)
 	 *	 - Alert Notification Control Point (0x2A44)
 	 */
 	ble_svc_ans_init(); // <-- ANS (Serviço de Notificação de Alertas) habilitado aqui
+	rc = ble_gatts_count_cfg(gatt_gnss_svcs);
+	if (rc != 0)
+	{
+		return rc;
+	}
+	rc = ble_gatts_add_svcs(gatt_gnss_svcs);
+	if (rc != 0)
+	{
+		return rc;
+	}
 
 	return 0;
 }

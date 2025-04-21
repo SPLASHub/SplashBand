@@ -157,3 +157,21 @@ Estes dados são codificados num buffer de 20 bytes da seguinte forma (**estrutu
 | **...**       | ...                       			|
 
 **Conclusão**: A precisão da localização requirida para este dispositivo é de 0,000001 graus (ou 11,1cm de precisão minima). 
+
+# Por fazer / considerar
+- [ ] Tornar ble seguro
+- [ ] Aumentar a precisão e exactidão do GPS (tanto em termos de programar o NEO-6M como o ESP32)
+- [ ] Melhorar a gestão de energia (sleep mode)
+- [ ] Optimizar o uso dos processadores e da memória
+- [ ] Optimizar as antenas (maior alcance de sinal) (usar a partition phy para configurar a antena per-device em vez de por software)
+- [ ] Aplicar Proximity Profile para calcular distância entre dispositivos
+
+## Futuro fazer / coniderar
+- [ ] Planear um pcb para a pulseira
+- [ ] Encriptar o software
+- [ ] Aplicar o BLE Mesh para aumentar o alcance do sinal
+- [ ] Programar dispositivo para programar o NEO-6M (ou outro sensor que seja optado futuramente), para ter uma configuração fixa e não ter que estar a programa-lo sempre que se liga
+- [ ] Adicionar à pulseira OTA para futuras atualizações ou criar um dispositivo para fazer upload de novas versões do firmware
+- [ ] Adicionar à pulseira um SPIFFS ou FAT ou LittleFS ou MicroSD para guardar dados tanto para gerenciamento de dispositivos e firmware como para guardar dados de localização (tipo orange box)
+- [ ] Adicionar sensores (ex: acelerometro, etc) e atuadores (ex: buzzer, led, etc) 
+- [ ] Adicionar ao software da pulseira um sistema de gestão do dispositivo (ex: para ver a versão do firmware, para ver o estado da bateria (seria necessario saber préviamente o hardware da pulseira) , etc)
