@@ -28,7 +28,7 @@ struct ble_gatt_register_ctxt;
 /** GNSS Server service UUID. */
 #define GNSS_SERVER_SVC_UUID   0x1136 // No BLE, o descobrimento de serviços e características ocorre via GATT (UUIDs e Services), não via SDP.
 /** N TENHO A CERTEZA */
-#define GNSS__SVC_UUID 0x1135 // No BLE, o descobrimento de serviços e características ocorre via GATT (UUIDs e Services), não via SDP.
+#define GNSS_SVC_UUID 0x1135 // No BLE, o descobrimento de serviços e características ocorre via GATT (UUIDs e Services), não via SDP.
 #define LATITUDE_CHR_UUID 0x2A67
 #define LONGITUDE_CHR_UUID 0x2A68
 

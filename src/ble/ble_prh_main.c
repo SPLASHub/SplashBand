@@ -142,12 +142,13 @@ ble_advertise(void)
 	fields.name = (uint8_t *)device_name;
 	fields.name_len = strlen(device_name);
 	fields.name_is_complete = 1;
-
+	// uuids to advertise, this is for the client to know what services are available before connecting
 	fields.uuids16 = (ble_uuid16_t[]){
-		BLE_UUID16_INIT(GATT_SVR_SVC_ALERT_UUID)};
-	fields.num_uuids16 = 1;
-	fields.uuids16_is_complete = 1;
-
+		BLE_UUID16_INIT(GATT_SVR_SVC_ALERT_UUID),	 // 0x1811 (Alert Notification)
+		BLE_UUID16_INIT(BLE_UUID_LOCATION_NAV_SVC)}; // 0x1819 (Location and Navigation)
+	fields.num_uuids16 = 2;
+	fields.uuids16_is_complete = 1; // 1 Indica que todos os UUIDs de 16 bits dos serviços primários suportados pelo dispositivo estão incluídos no pacote de advertising
+									// 0 cliente pode realizar uma descoberta de serviços completa via GATT para encontrar serviços não anunciados.
 	rc = ble_gap_adv_set_fields(&fields);
 	if (rc != 0)
 	{
@@ -212,7 +213,7 @@ static void ble_on_reset(int reason)
  * Chamado quando o stack BLE sincroniza com o controlador e está
  * pronto para iniciar as operações (ex.: publicidade). É aqui que
  * normalmente se inicia a publicidade.
- *----------------------------------------------------------*/
+ *------------------------BLE_GATT_ACCESS_OP_READ_CHR----------------------------------*/
 static void ble_on_sync(void)
 {
 	ESP_LOGI(TAG, "BLE Host Sync: Stack pronto");

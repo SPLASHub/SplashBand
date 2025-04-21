@@ -115,6 +115,10 @@ void gatt_svr_register_cb(struct ble_gatt_register_ctxt *ctxt, void *arg)
 		break;
 
 	case BLE_GATT_REGISTER_OP_CHR:
+		if (ble_uuid_cmp(ctxt->chr.chr_def->uuid, BLE_UUID16_DECLARE(BLE_UUID_LOC_SPEED_CHR)) == 0)
+		{
+			attr_handle_location_speed = ctxt->chr.val_handle; // atribui o handle da característica
+		}
 		MODLOG_DFLT(DEBUG, "registering characteristic %s with "
 						   "def_handle=%d val_handle=%d\n",
 					ble_uuid_to_str(ctxt->chr.chr_def->uuid, buf),
