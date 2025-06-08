@@ -1,5 +1,6 @@
-# Descrição
-Protótipo de pulseira de monitoramento.
+# SplashBand: GPS Wearable for Kids' Beach Safety
+
+This repository showcases the SplashBand, a proof-of-concept GPS-enabled wearable specifically designed to enhance children's safety on beaches. As an integral part of the SPLASH ecosystem, the SplashBand allows parents to easily monitor their child's location in real-time via the Splash web app, offering peace of mind during seaside adventures.
 
 Utiliza um microcontrolador ESP32-S3-WROOM-1 N16R8 para coletar dados de um sensor GPS NEO-6M e enviar esses dados via BLE.
 # Requisitos
